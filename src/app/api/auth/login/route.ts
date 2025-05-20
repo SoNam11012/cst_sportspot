@@ -28,10 +28,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
     }
 
+    // Check if JWT_SECRET is available
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key-for-development-only';
+    
+    if (!process.env.JWT_SECRET) {
+      console.warn('WARNING: JWT_SECRET environment variable is not set. Using fallback secret for development only.');
+    }
+    
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET as string,
+      jwtSecret,
       { expiresIn: '7d' }
     );
 
@@ -49,8 +56,28 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Provide more specific error messages based on error type
+    if (error.name === 'MongoServerSelectionError') {
+      return NextResponse.json({ 
+        message: 'Database connection error. Please try again later.',
+        details: 'Could not connect to database server'
+      }, { status: 500 });
+    } else if (error.name === 'JsonWebTokenError') {
+      return NextResponse.json({ 
+        message: 'Authentication error. Please try again later.',
+        details: 'Error generating authentication token'
+      }, { status: 500 });
+    } else {
+      return NextResponse.json({ 
+        message: 'Internal server error', 
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }, { status: 500 });
+    }
   }
 }
