@@ -5,6 +5,12 @@ process.env.MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://mongouser:ro
 process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "some-random-secret";
 process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL || "https://cst-sportspot.vercel.app";
 
+// Log environment variables during build (for debugging)
+console.log('Build-time environment variables:');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set (value hidden)' : 'Not set');
+console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET ? 'Set (value hidden)' : 'Not set');
+console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+
 const nextConfig: NextConfig = {
   // Disable ESLint during production builds
   eslint: {
