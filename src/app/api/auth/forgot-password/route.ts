@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Mock function to simulate database user lookup
 async function findUserByEmail(email: string) {
@@ -19,23 +19,20 @@ function generateResetToken() {
   return Math.random().toString(36).slice(2); // simple random string, replace with secure version
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { email } = req.body;
-
-  if (!email || typeof email !== 'string') {
-    return res.status(400).json({ message: 'Invalid email' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email || typeof email !== 'string') {
+      return NextResponse.json({ message: 'Invalid email' }, { status: 400 });
+    }
+
     const user = await findUserByEmail(email);
 
     // Always respond with success to avoid user enumeration
     if (!user) {
-      return res.status(200).json({ message: 'If an account with that email exists, a reset link has been sent.' });
+      return NextResponse.json({ message: 'If an account with that email exists, a reset link has been sent.' });
     }
 
     const resetToken = generateResetToken();
@@ -44,9 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await sendResetEmail(email, resetToken);
 
-    return res.status(200).json({ message: 'Reset link sent successfully' });
+    return NextResponse.json({ message: 'Reset link sent successfully' });
   } catch (error) {
     console.error('Forgot password error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
